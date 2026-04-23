@@ -1,0 +1,12 @@
+docs
+# Build output
+**/bin/
+**/obj/
+
+# User-specific files
+*.user
+.vs/
+.idea/
+
+# Environment / secrets
+appsettings.Development.json

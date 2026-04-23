@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Identity\JobMarketplace.Identity.Infrastructure\JobMarketplace.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\Jobs\JobMarketplace.Jobs.Infrastructure\JobMarketplace.Jobs.Infrastructure.csproj" />
+    <ProjectReference Include="..\Applications\JobMarketplace.Applications.Infrastructure\JobMarketplace.Applications.Infrastructure.csproj" />
+    <ProjectReference Include="..\SharedKernel\JobMarketplace.SharedKernel\JobMarketplace.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

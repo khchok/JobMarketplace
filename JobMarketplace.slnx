@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JobMarketplace.Api/JobMarketplace.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Applications/">
+    <Project Path="src/Applications/JobMarketplace.Applications.Application/JobMarketplace.Applications.Application.csproj" />
+    <Project Path="src/Applications/JobMarketplace.Applications.Domain/JobMarketplace.Applications.Domain.csproj" />
+    <Project Path="src/Applications/JobMarketplace.Applications.Infrastructure/JobMarketplace.Applications.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Identity/">
+    <Project Path="src/Identity/JobMarketplace.Identity.Application/JobMarketplace.Identity.Application.csproj" />
+    <Project Path="src/Identity/JobMarketplace.Identity.Domain/JobMarketplace.Identity.Domain.csproj" />
+    <Project Path="src/Identity/JobMarketplace.Identity.Infrastructure/JobMarketplace.Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Jobs/">
+    <Project Path="src/Jobs/JobMarketplace.Jobs.Application/JobMarketplace.Jobs.Application.csproj" />
+    <Project Path="src/Jobs/JobMarketplace.Jobs.Domain/JobMarketplace.Jobs.Domain.csproj" />
+    <Project Path="src/Jobs/JobMarketplace.Jobs.Infrastructure/JobMarketplace.Jobs.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/SharedKernel/">
+    <Project Path="src/SharedKernel/JobMarketplace.SharedKernel/JobMarketplace.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JobMarketplace.Applications.Domain.Tests/JobMarketplace.Applications.Domain.Tests.csproj" />
+    <Project Path="tests/JobMarketplace.Jobs.Domain.Tests/JobMarketplace.Jobs.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
