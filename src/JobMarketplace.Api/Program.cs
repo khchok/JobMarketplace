@@ -64,6 +64,8 @@ builder.Services.AddHostedService<OutboxProcessor>();
 var app = builder.Build();
 
 app.MapOpenApi();
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", utc = DateTime.UtcNow }))
+   .AllowAnonymous();
 
 // Middleware after builder.build;
 app.UseAuthentication();
