@@ -28,11 +28,11 @@ jobs:
         run: dotnet build ./JobMarketplace.slnx --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish ./JobMarketplace.slnx --configuration Release --no-build --output '${{ env.AZURE_WEBAPP_PACKAGE }}'
+        run: dotnet publish ./src/JobMarketplace.Api/JobMarketplace.Api.csproj --configuration Release --no-build --property:PublishDir='${{ env.AZURE_WEBAPP_PACKAGE }}'
 
       - name: Deploy
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-          package: "${{ env.AZURE_WEBAPP_PACKAGE }}"
+          package: "./src/JobMarketplace.Api/publish"
