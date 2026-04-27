@@ -2,6 +2,7 @@ using JobMarketplace.Jobs.Application;
 using JobMarketplace.Jobs.Application.Interfaces;
 using JobMarketplace.Jobs.Application.Queries.GetJob;
 using JobMarketplace.Jobs.Application.Queries.ListJobs;
+using JobMarketplace.Jobs.Application.Queries.ListMyJobs;
 using JobMarketplace.Jobs.Domain.Repositories;
 using JobMarketplace.Jobs.Infrastructure.Persistence;
 using JobMarketplace.Jobs.Infrastructure.Persistence.Repositories;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IJobRepository, JobRepository>();
         services.AddScoped<IJobReadRepository, JobRepository>();
         services.AddScoped<IJobListReadRepository, JobRepository>();
+        services.AddScoped<IMyJobListReadRepository, JobRepository>();
 
         return services;
     }

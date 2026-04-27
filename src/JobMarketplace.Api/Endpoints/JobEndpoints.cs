@@ -5,6 +5,7 @@ using JobMarketplace.Jobs.Application.Commands.CreateJob;
 using JobMarketplace.Jobs.Application.Commands.PublishJob;
 using JobMarketplace.Jobs.Application.Queries.GetJob;
 using JobMarketplace.Jobs.Application.Queries.ListJobs;
+using JobMarketplace.Jobs.Application.Queries.ListMyJobs;
 using MediatR;
 
 namespace JobMarketplace.Api.Endpoints;
@@ -43,6 +44,20 @@ public static class JobEndpoints
             var result = await sender.Send(query, ct);
             return result.ToHttpResult();
         });
+
+        group.MapGet("/mine", async (
+            int page, int pageSize,
+            ICurrentUserServiceAccessor accessor,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var query = new ListMyJobsQuery(
+                accessor.Current.UserId,
+                page > 0 ? page : 1,
+                pageSize > 0 ? pageSize : 20);
+            var result = await sender.Send(query, ct);
+            return result.ToHttpResult();
+        }).RequireAuthorization("Employer");
 
         group.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
         {

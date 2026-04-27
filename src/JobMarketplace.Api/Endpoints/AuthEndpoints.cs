@@ -31,8 +31,17 @@ public static class AuthEndpoints
 
             var token = GenerateToken(result.Value, cfg["Jwt:Secret"]!);
             SetAuthCookie(ctx, token);
-            return Results.Ok();
+            return Results.Ok(new { result.Value.Email, result.Value.Role });
         });
+
+        group.MapGet("/me", (HttpContext ctx) =>
+        {
+            var userId = ctx.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                         ?? ctx.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var email = ctx.User.FindFirstValue(JwtRegisteredClaimNames.Email);
+            var role = ctx.User.FindFirstValue("app_role");
+            return Results.Ok(new { userId, email, role });
+        }).RequireAuthorization();
 
         group.MapPost("/logout", (HttpContext ctx) =>
         {
@@ -64,14 +73,17 @@ public static class AuthEndpoints
         return group;
     }
 
-    private static void SetAuthCookie(HttpContext ctx, string token) =>
+    private static void SetAuthCookie(HttpContext ctx, string token)
+    {
+        var isHttps = ctx.Request.IsHttps;
         ctx.Response.Cookies.Append("access_token", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = isHttps,
+            SameSite = isHttps ? SameSiteMode.Strict : SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
+    }
 
     private static string GenerateToken(LoginResultDto user, string secret)
     {

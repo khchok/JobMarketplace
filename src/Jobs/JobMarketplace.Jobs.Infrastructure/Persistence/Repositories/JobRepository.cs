@@ -1,6 +1,7 @@
 using JobMarketplace.Jobs.Application.DTOs;
 using JobMarketplace.Jobs.Application.Queries.GetJob;
 using JobMarketplace.Jobs.Application.Queries.ListJobs;
+using JobMarketplace.Jobs.Application.Queries.ListMyJobs;
 using JobMarketplace.Jobs.Domain.Aggregates;
 using JobMarketplace.Jobs.Domain.Enums;
 using JobMarketplace.Jobs.Domain.Repositories;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace JobMarketplace.Jobs.Infrastructure.Persistence.Repositories;
 
 public sealed class JobRepository(JobsDbContext dbContext)
-    : IJobRepository, IJobReadRepository, IJobListReadRepository
+    : IJobRepository, IJobReadRepository, IJobListReadRepository, IMyJobListReadRepository
 {
     public async Task<Job?> GetByIdAsync(JobId id, CancellationToken ct = default) =>
         await dbContext.Jobs.FirstOrDefaultAsync(j => j.Id == id, ct);
@@ -75,5 +76,32 @@ public sealed class JobRepository(JobsDbContext dbContext)
             .ToListAsync(ct);
 
         return new PagedList<JobSummaryDto>(items, page, pageSize, total);
+    }
+
+    public async Task<PagedList<MyJobSummaryDto>> ListByEmployerAsync(
+        UserId employerId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = dbContext.Jobs.Where(j => j.EmployerId == employerId);
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderByDescending(j => j.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(j => new MyJobSummaryDto(
+                j.Id.Value,
+                j.Title.Value,
+                j.Location.City,
+                j.Location.Country,
+                j.SalaryRange.Min,
+                j.SalaryRange.Max,
+                j.SalaryRange.Currency,
+                j.Status,
+                j.CreatedAt,
+                j.PublishedAt))
+            .ToListAsync(ct);
+
+        return new PagedList<MyJobSummaryDto>(items, page, pageSize, total);
     }
 }
