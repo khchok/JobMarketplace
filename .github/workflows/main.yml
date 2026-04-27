@@ -38,17 +38,6 @@ jobs:
           echo "=== Entry point ==="
           ls ${{ env.PUBLISH_DIR }}/JobMarketplace.Api* || echo "WARNING: entry point binary not found"
 
-      - name: Push app settings to Azure
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-          app-settings-json: |
-            [
-              { "name": "ConnectionStrings__Database", "value": "${{ secrets.DATABASE_CONNECTION_STRING }}", "slotSetting": false },
-              { "name": "Jwt__Secret", "value": "${{ secrets.JWT_SECRET }}", "slotSetting": false }
-            ]
-
       - name: Deploy
         uses: Azure/webapps-deploy@v2.2.19
         with:
