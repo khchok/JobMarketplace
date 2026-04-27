@@ -10,7 +10,7 @@ env:
   AZURE_WEBAPP_PACKAGE: "./publish"
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,11 +28,26 @@ jobs:
         run: dotnet build ./JobMarketplace.slnx --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish ./src/JobMarketplace.Api/JobMarketplace.Api.csproj --configuration Release --no-build --property:PublishDir='${{ env.AZURE_WEBAPP_PACKAGE }}'
+        run: dotnet publish ./JobMarketplace.slnx --configuration Release --no-build --property:PublishDir='${{ env.AZURE_WEBAPP_PACKAGE }}'
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: .net-app
+          path: "${{ env.AZURE_WEBAPP_PACKAGE }}"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v5
+        with:
+          name: .net-app
 
       - name: Deploy
-        uses: azure/webapps-deploy@v3
+        uses: Azure/webapps-deploy@v2.2.19
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-          package: "./src/JobMarketplace.Api/publish"
+          package: "${{ env.AZURE_WEBAPP_PACKAGE }}"
