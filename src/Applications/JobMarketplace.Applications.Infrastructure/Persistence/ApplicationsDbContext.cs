@@ -22,12 +22,11 @@ public sealed class ApplicationsDbContext(DbContextOptions<ApplicationsDbContext
         // Read-only view of jobs table — no migrations generated for this entity
         modelBuilder.Entity<JobReadModel>(b =>
         {
-            b.ToTable("jobs", schema: "jobs");
+            b.ToView("jobs", schema: "jobs");
             b.HasKey(j => j.Id);
             b.Property(j => j.Id).HasColumnName("id");
             b.Property(j => j.EmployerId).HasColumnName("employer_id");
             b.Property(j => j.Status).HasColumnName("status");
-            b.ToView("jobs", schema: "jobs"); // marks as view — EFCore won't generate migration for it
         });
     }
 

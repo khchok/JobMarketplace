@@ -9,6 +9,8 @@ namespace JobMarketplace.Identity.Domain.Aggregates;
 
 public sealed class UserProfile : AggregateRoot<UserId>
 {
+    private UserProfile() : base(default!) { } // For EF Core materialization
+
     private UserProfile(
         UserId id,
         EmailAddress email,
