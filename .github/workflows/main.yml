@@ -22,19 +22,19 @@ jobs:
           dotnet-version: "10.0"
 
       - name: Restore package
-        run: dotnet restore ./JobMarketplace.slnx
+        run: dotnet restore ./src/JobMarketplace.Api/JobMarketplace.Api.csproj
 
       - name: Build package
-        run: dotnet build ./JobMarketplace.slnx --configuration Release --no-restore
+        run: dotnet build ./src/JobMarketplace.Api/JobMarketplace.Api.csproj --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish ./JobMarketplace.slnx --configuration Release --no-build --property:PublishDir='${{ env.AZURE_WEBAPP_PACKAGE }}'
+        run: dotnet publish ./src/JobMarketplace.Api/JobMarketplace.Api.csproj --configuration Release --no-build --property:PublishDir='${{ env.DOTNET_ROOT }}/publish'
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: "${{ env.AZURE_WEBAPP_PACKAGE }}"
+          path: "${{ env.DOTNET_ROOT }}/publish"
 
   deploy:
     runs-on: ubuntu-latest
