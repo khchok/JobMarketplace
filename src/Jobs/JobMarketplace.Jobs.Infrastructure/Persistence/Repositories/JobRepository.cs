@@ -45,8 +45,8 @@ public sealed class JobRepository(JobsDbContext dbContext)
 
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(j =>
-                EF.Functions.ILike(j.Title.Value, $"%{keyword}%") ||
-                EF.Functions.ILike(j.Description.Value, $"%{keyword}%"));
+                EF.Functions.Like(j.Title.Value, $"%{keyword}%") ||
+                EF.Functions.Like(j.Description.Value, $"%{keyword}%"));
 
         if (!string.IsNullOrWhiteSpace(country))
             query = query.Where(j => j.Location.Country == country);

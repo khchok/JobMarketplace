@@ -10,7 +10,6 @@ public sealed class UserProfileConfigurations : IEntityTypeConfiguration<UserPro
 {
     public void Configure(EntityTypeBuilder<UserProfile> builder)
     {
-
         builder.ToTable("user_profiles");
 
         builder.HasKey(p => p.Id);
@@ -19,19 +18,13 @@ public sealed class UserProfileConfigurations : IEntityTypeConfiguration<UserPro
             .HasConversion(id => id.Value, value => UserId.From(value))
             .HasColumnName("id");
 
-        builder.Property(p => p.SupabaseUserId)
-            .HasMaxLength(255)
-            .HasColumnName("supabase_user_id")
-            .IsRequired();
-
-        builder.HasIndex(p => p.SupabaseUserId).IsUnique();
-
         builder.OwnsOne(p => p.Email, emailBuilder =>
         {
             emailBuilder.Property(e => e.Value)
                 .HasMaxLength(320)
                 .HasColumnName("email")
                 .IsRequired();
+            emailBuilder.HasIndex(e => e.Value).IsUnique();
         });
 
         builder.Property(p => p.FullName)
@@ -43,6 +36,11 @@ public sealed class UserProfileConfigurations : IEntityTypeConfiguration<UserPro
             .HasConversion(r => r.ToString(), s => Enum.Parse<UserRole>(s))
             .HasMaxLength(20)
             .HasColumnName("role")
+            .IsRequired();
+
+        builder.Property(p => p.PasswordHash)
+            .HasMaxLength(100)
+            .HasColumnName("password_hash")
             .IsRequired();
 
         builder.Property(p => p.CreatedAt)

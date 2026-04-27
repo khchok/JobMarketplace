@@ -22,7 +22,7 @@ public static class DependencyInjection
         services.AddApplicationsApplication();
 
         services.AddDbContext<ApplicationsDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("Database")));
+            options.UseSqlServer(configuration.GetConnectionString("Database")));
 
         services.AddScoped<IApplicationsUnitOfWork>(sp => sp.GetRequiredService<ApplicationsDbContext>());
         services.AddScoped<IApplicationRepository, ApplicationRepository>();

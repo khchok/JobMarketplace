@@ -8,7 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobMarketplace.Identity.Infrastructure.Persistence;
 
-public sealed class IdentityDbContext : DbContext, IIdentityUnitOfWork
+public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> options)
+    : DbContext(options), IIdentityUnitOfWork
 {
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();

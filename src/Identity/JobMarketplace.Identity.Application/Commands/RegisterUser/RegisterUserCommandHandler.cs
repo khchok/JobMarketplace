@@ -1,31 +1,29 @@
-
 using JobMarketplace.Identity.Application.DTOs;
+using JobMarketplace.Identity.Application.Interfaces;
 using JobMarketplace.Identity.Domain.Aggregates;
 using JobMarketplace.Identity.Domain.Interfaces;
 using JobMarketplace.Identity.Domain.Repositories;
 using JobMarketplace.SharedKernel.Results;
 using MediatR;
 
-namespace JobMarketplace.Identity.Application.Commands.CreateUserProfile;
+namespace JobMarketplace.Identity.Application.Commands.RegisterUser;
 
-public sealed class CreateUserProfileCommandHandler(
+public sealed class RegisterUserCommandHandler(
     IUserProfileRepository repository,
-    IIdentityUnitOfWork unitOfWork)
-    : IRequestHandler<CreateUserProfileCommand, Result<UserProfileDto>>
+    IIdentityUnitOfWork unitOfWork,
+    IPasswordHasher passwordHasher)
+    : IRequestHandler<RegisterUserCommand, Result<UserProfileDto>>
 {
-    public async Task<Result<UserProfileDto>> Handle(CreateUserProfileCommand request, CancellationToken cancellationToken)
+    public async Task<Result<UserProfileDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        var existing = await repository.GetBySupabaseUserIdAsync(request.SupabaseUserId, cancellationToken);
+        var existing = await repository.GetByEmailAsync(request.Email, cancellationToken);
         if (existing is not null)
             return Result<UserProfileDto>.Failure(
-                Error.Conflict($"A profile already exists for user '{request.SupabaseUserId}'."));
+                Error.Conflict($"An account with email '{request.Email}' already exists."));
 
-        var profileResult = UserProfile.Create(
-            request.SupabaseUserId,
-            request.Email,
-            request.FullName,
-            request.Role);
+        var passwordHash = passwordHasher.Hash(request.Password);
 
+        var profileResult = UserProfile.Create(request.Email, request.FullName, request.Role, passwordHash);
         if (profileResult.IsFailure)
             return Result<UserProfileDto>.Failure(profileResult.Error);
 

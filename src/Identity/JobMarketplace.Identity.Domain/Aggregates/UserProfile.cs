@@ -11,51 +11,54 @@ public sealed class UserProfile : AggregateRoot<UserId>
 {
     private UserProfile(
         UserId id,
-        string supabaseUserId,
         EmailAddress email,
         string fullName,
         UserRole role,
+        string passwordHash,
         DateTime createdAt)
         : base(id)
     {
-        SupabaseUserId = supabaseUserId;
         Email = email;
         FullName = fullName;
         Role = role;
+        PasswordHash = passwordHash;
         CreatedAt = createdAt;
     }
 
-    public string SupabaseUserId { get; private set; } = string.Empty;
-    public EmailAddress Email { get; private set; }
+    public EmailAddress Email { get; private set; } = null!;
     public string FullName { get; private set; } = string.Empty;
     public UserRole Role { get; private set; }
+    public string PasswordHash { get; private set; } = string.Empty;
     public DateTime CreatedAt { get; private set; }
 
-    public static Result<UserProfile> Create(string supabaseUserId, string email, string fullName, UserRole role)
+    public static Result<UserProfile> Create(string email, string fullName, UserRole role, string passwordHash)
     {
-        var userId = UserId.NewId();
-        var createdAt = DateTime.UtcNow;
-        var emailResult = EmailAddress.Create(email);
+        if (string.IsNullOrWhiteSpace(fullName))
+            return Result<UserProfile>.Failure(Error.Validation("Full name cannot be empty."));
 
+        var emailResult = EmailAddress.Create(email);
         if (emailResult.IsFailure)
             return Result<UserProfile>.Failure(emailResult.Error);
 
-        var userProfile = new UserProfile(userId, supabaseUserId, emailResult.Value, fullName, role, createdAt);
-        userProfile.RaiseDomainEvent(new UserProfileCreatedEvent(userId, supabaseUserId));
+        var profile = new UserProfile(
+            UserId.NewId(),
+            emailResult.Value,
+            fullName,
+            role,
+            passwordHash,
+            DateTime.UtcNow);
 
+        profile.RaiseDomainEvent(new UserProfileCreatedEvent(profile.Id));
 
-        return Result<UserProfile>.Success(userProfile);
+        return Result<UserProfile>.Success(profile);
     }
 
     public Result UpdateFullName(string newFullName)
     {
         if (string.IsNullOrEmpty(newFullName))
-        {
             return Result.Failure(Error.Validation("Full name cannot be empty."));
-        }
 
         FullName = newFullName;
-
         return Result.Success();
     }
 }

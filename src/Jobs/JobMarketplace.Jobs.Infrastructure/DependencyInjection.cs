@@ -20,7 +20,7 @@ public static class DependencyInjection
         services.AddJobsApplication();
 
         services.AddDbContext<JobsDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("Database")));
+            options.UseSqlServer(configuration.GetConnectionString("Database")));
 
         services.AddScoped<IJobsUnitOfWork>(sp => sp.GetRequiredService<JobsDbContext>());
         services.AddScoped<IJobRepository, JobRepository>();

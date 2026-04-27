@@ -1,9 +1,11 @@
 
 using JobMarketplace.Identity.Application;
+using JobMarketplace.Identity.Application.Interfaces;
 using JobMarketplace.Identity.Domain.Interfaces;
 using JobMarketplace.Identity.Domain.Repositories;
 using JobMarketplace.Identity.Infrastructure.Persistence;
 using JobMarketplace.Identity.Infrastructure.Persistence.Repositories;
+using JobMarketplace.Identity.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +21,11 @@ public static class DependencyInjection
         services.AddIdentityApplication();
 
         services.AddDbContext<IdentityDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("Database")));
+            options.UseSqlServer(configuration.GetConnectionString("Database")));
 
         services.AddScoped<IIdentityUnitOfWork>(sp => sp.GetRequiredService<IdentityDbContext>());
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
         return services;
     }
