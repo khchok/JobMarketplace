@@ -26,6 +26,9 @@ public sealed class ApplicationsDbContext(DbContextOptions<ApplicationsDbContext
             b.HasKey(j => j.Id);
             b.Property(j => j.Id).HasColumnName("id");
             b.Property(j => j.EmployerId).HasColumnName("employer_id");
+            b.Property(j => j.Title).HasColumnName("title");
+            b.Property(j => j.City).HasColumnName("city");
+            b.Property(j => j.Country).HasColumnName("country");
             b.Property(j => j.Status).HasColumnName("status");
         });
     }

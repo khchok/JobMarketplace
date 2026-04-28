@@ -40,10 +40,16 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
         var query = dbContext.Applications.Where(a => a.JobId == JobId.From(jobId));
         var total = await query.CountAsync(ct);
         var items = await query
+            .Join(dbContext.JobReadModels,
+                a => a.JobId.Value,
+                j => j.Id,
+                (a, j) => new ApplicationSummaryDto(
+                    a.Id.Value, a.JobId.Value, a.CandidateId.Value,
+                    j.Title, j.City, j.Country,
+                    a.Status, a.SubmittedAt))
             .OrderByDescending(a => a.SubmittedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(a => new ApplicationSummaryDto(a.Id.Value, a.CandidateId.Value, a.Status, a.SubmittedAt))
             .ToListAsync(ct);
 
         return new PagedList<ApplicationSummaryDto>(items, page, pageSize, total);
@@ -55,10 +61,16 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
         var query = dbContext.Applications.Where(a => a.CandidateId == UserId.From(candidateId));
         var total = await query.CountAsync(ct);
         var items = await query
+            .Join(dbContext.JobReadModels,
+                a => a.JobId.Value,
+                j => j.Id,
+                (a, j) => new ApplicationSummaryDto(
+                    a.Id.Value, a.JobId.Value, a.CandidateId.Value,
+                    j.Title, j.City, j.Country,
+                    a.Status, a.SubmittedAt))
             .OrderByDescending(a => a.SubmittedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(a => new ApplicationSummaryDto(a.Id.Value, a.CandidateId.Value, a.Status, a.SubmittedAt))
             .ToListAsync(ct);
 
         return new PagedList<ApplicationSummaryDto>(items, page, pageSize, total);
