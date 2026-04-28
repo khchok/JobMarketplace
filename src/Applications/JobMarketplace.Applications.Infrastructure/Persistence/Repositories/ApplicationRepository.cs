@@ -39,19 +39,14 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
     {
         var baseQuery = dbContext.Applications.Where(a => a.JobId == JobId.From(jobId));
         var total = await baseQuery.CountAsync(ct);
-        var items = await baseQuery
-            .Join(dbContext.JobReadModels,
-                a => EF.Property<Guid>(a, "JobId"),
-                j => j.Id,
-                (a, j) => new ApplicationSummaryDto(
-                    a.Id.Value, a.JobId.Value, a.CandidateId.Value,
-                    j.Title, j.City, j.Country,
-                    a.Status, a.SubmittedAt))
-            .OrderByDescending(x => x.SubmittedAt)
+
+        var applications = await baseQuery
+            .OrderByDescending(a => a.SubmittedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
 
+        var items = await EnrichWithJobDetailsAsync(applications, ct);
         return new PagedList<ApplicationSummaryDto>(items, page, pageSize, total);
     }
 
@@ -60,19 +55,37 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
     {
         var baseQuery = dbContext.Applications.Where(a => a.CandidateId == UserId.From(candidateId));
         var total = await baseQuery.CountAsync(ct);
-        var items = await baseQuery
-            .Join(dbContext.JobReadModels,
-                a => EF.Property<Guid>(a, "JobId"),
-                j => j.Id,
-                (a, j) => new ApplicationSummaryDto(
-                    a.Id.Value, a.JobId.Value, a.CandidateId.Value,
-                    j.Title, j.City, j.Country,
-                    a.Status, a.SubmittedAt))
-            .OrderByDescending(x => x.SubmittedAt)
+
+        var applications = await baseQuery
+            .OrderByDescending(a => a.SubmittedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
 
+        var items = await EnrichWithJobDetailsAsync(applications, ct);
         return new PagedList<ApplicationSummaryDto>(items, page, pageSize, total);
+    }
+
+    private async Task<List<ApplicationSummaryDto>> EnrichWithJobDetailsAsync(
+        List<Domain.Aggregates.Application> applications,
+        CancellationToken ct)
+    {
+        var jobIds = applications.Select(a => a.JobId.Value).Distinct().ToList();
+        var jobs = await dbContext.JobReadModels
+            .Where(j => jobIds.Contains(j.Id))
+            .ToListAsync(ct);
+
+        var jobMap = jobs.ToDictionary(j => j.Id);
+
+        return applications.Select(a =>
+        {
+            jobMap.TryGetValue(a.JobId.Value, out var job);
+            return new ApplicationSummaryDto(
+                a.Id.Value, a.JobId.Value, a.CandidateId.Value,
+                job?.Title ?? string.Empty,
+                job?.City ?? string.Empty,
+                job?.Country ?? string.Empty,
+                a.Status, a.SubmittedAt);
+        }).ToList();
     }
 }
