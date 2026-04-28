@@ -2,6 +2,7 @@ using JobMarketplace.Applications.Application.DTOs;
 using JobMarketplace.Applications.Application.Queries.GetApplication;
 using JobMarketplace.Applications.Application.Queries.ListApplicationsForJob;
 using JobMarketplace.Applications.Domain.Aggregates;
+using JobMarketplace.Applications.Domain.Enums;
 using JobMarketplace.Applications.Domain.Repositories;
 using JobMarketplace.SharedKernel.Ids;
 using Microsoft.EntityFrameworkCore;
@@ -37,55 +38,78 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
     public async Task<PagedList<ApplicationSummaryDto>> ListForJobAsync(
         Guid jobId, int page, int pageSize, CancellationToken ct = default)
     {
-        var baseQuery = dbContext.Applications.Where(a => a.JobId == JobId.From(jobId));
-        var total = await baseQuery.CountAsync(ct);
+        var total = await dbContext.Applications
+            .Where(a => a.JobId == JobId.From(jobId))
+            .CountAsync(ct);
 
-        var applications = await baseQuery
-            .OrderByDescending(a => a.SubmittedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+        var offset = (page - 1) * pageSize;
+        var rows = await dbContext.Database
+            .SqlQuery<ApplicationJobRow>($"""
+                SELECT a.id          AS Id,
+                       a.job_id      AS JobId,
+                       a.candidate_id AS CandidateId,
+                       j.title       AS JobTitle,
+                       j.city        AS JobCity,
+                       j.country     AS JobCountry,
+                       a.status      AS Status,
+                       a.submitted_at AS SubmittedAt
+                FROM applications.applications a
+                INNER JOIN jobs.jobs j ON j.id = a.job_id
+                WHERE a.job_id = {jobId}
+                ORDER BY a.submitted_at DESC
+                OFFSET {offset} ROWS FETCH NEXT {pageSize} ROWS ONLY
+                """)
             .ToListAsync(ct);
 
-        var items = await EnrichWithJobDetailsAsync(applications, ct);
+        var items = rows.Select(r => r.ToDto()).ToList();
         return new PagedList<ApplicationSummaryDto>(items, page, pageSize, total);
     }
 
     public async Task<PagedList<ApplicationSummaryDto>> ListForCandidateAsync(
         Guid candidateId, int page, int pageSize, CancellationToken ct = default)
     {
-        var baseQuery = dbContext.Applications.Where(a => a.CandidateId == UserId.From(candidateId));
-        var total = await baseQuery.CountAsync(ct);
+        var total = await dbContext.Applications
+            .Where(a => a.CandidateId == UserId.From(candidateId))
+            .CountAsync(ct);
 
-        var applications = await baseQuery
-            .OrderByDescending(a => a.SubmittedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+        var offset = (page - 1) * pageSize;
+        var rows = await dbContext.Database
+            .SqlQuery<ApplicationJobRow>($"""
+                SELECT a.id           AS Id,
+                       a.job_id       AS JobId,
+                       a.candidate_id AS CandidateId,
+                       j.title        AS JobTitle,
+                       j.city         AS JobCity,
+                       j.country      AS JobCountry,
+                       a.status       AS Status,
+                       a.submitted_at AS SubmittedAt
+                FROM applications.applications a
+                INNER JOIN jobs.jobs j ON j.id = a.job_id
+                WHERE a.candidate_id = {candidateId}
+                ORDER BY a.submitted_at DESC
+                OFFSET {offset} ROWS FETCH NEXT {pageSize} ROWS ONLY
+                """)
             .ToListAsync(ct);
 
-        var items = await EnrichWithJobDetailsAsync(applications, ct);
+        var items = rows.Select(r => r.ToDto()).ToList();
         return new PagedList<ApplicationSummaryDto>(items, page, pageSize, total);
     }
 
-    private async Task<List<ApplicationSummaryDto>> EnrichWithJobDetailsAsync(
-        List<Domain.Aggregates.Application> applications,
-        CancellationToken ct)
+    private sealed class ApplicationJobRow
     {
-        var jobIds = applications.Select(a => a.JobId.Value).Distinct().ToList();
-        var jobs = await dbContext.JobReadModels
-            .Where(j => jobIds.Contains(j.Id))
-            .ToListAsync(ct);
+        public Guid Id { get; set; }
+        public Guid JobId { get; set; }
+        public Guid CandidateId { get; set; }
+        public string JobTitle { get; set; } = string.Empty;
+        public string JobCity { get; set; } = string.Empty;
+        public string JobCountry { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public DateTime SubmittedAt { get; set; }
 
-        var jobMap = jobs.ToDictionary(j => j.Id);
-
-        return applications.Select(a =>
-        {
-            jobMap.TryGetValue(a.JobId.Value, out var job);
-            return new ApplicationSummaryDto(
-                a.Id.Value, a.JobId.Value, a.CandidateId.Value,
-                job?.Title ?? string.Empty,
-                job?.City ?? string.Empty,
-                job?.Country ?? string.Empty,
-                a.Status, a.SubmittedAt);
-        }).ToList();
+        public ApplicationSummaryDto ToDto() => new(
+            Id, JobId, CandidateId,
+            JobTitle, JobCity, JobCountry,
+            Enum.Parse<ApplicationStatus>(Status),
+            SubmittedAt);
     }
 }
