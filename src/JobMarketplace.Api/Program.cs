@@ -41,7 +41,8 @@ builder.Services.AddOpenApi();
 // Authorization policies
 builder.Services.AddAuthorizationBuilder()
                     .AddPolicy("Employer", p => p.RequireClaim("app_role", "Employer"))
-                    .AddPolicy("Candidate", p => p.RequireClaim("app_role", "Candidate"));
+                    .AddPolicy("Candidate", p => p.RequireClaim("app_role", "Candidate"))
+                    .AddPolicy("CandidateOrEmployer", p => p.RequireClaim("app_role", ["Employer", "Candidate"]));
 
 
 // Add infras
