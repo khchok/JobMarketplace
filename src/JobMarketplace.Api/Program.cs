@@ -82,6 +82,6 @@ app.MapGroup("/api/auth").MapAuthEndpoints(builder.Configuration);
 app.MapGroup("/api/identity").MapIdentityEndpoints();
 app.MapGroup("/api/jobs").MapJobEndpoints();
 app.MapGroup("/api/applications").MapApplicationEndpoints();
-app.MapGroup("/api/admin").MapAdminEndpoints();
+app.MapGroup("/api/admin").RequireAuthorization("Admin").MapAdminEndpoints();
 
 app.Run();

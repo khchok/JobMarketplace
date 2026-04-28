@@ -41,7 +41,7 @@ public static class AuthEndpoints
             var email = ctx.User.FindFirstValue(JwtRegisteredClaimNames.Email);
             var role = ctx.User.FindFirstValue("app_role");
             return Results.Ok(new { userId, email, role });
-        }).RequireAuthorization("CandidateOrEmployer");
+        }).RequireAuthorization();
 
         group.MapPost("/logout", (HttpContext ctx) =>
         {

@@ -15,22 +15,19 @@ public static class AdminEndpoints
             IdentityDbContext db,
             CancellationToken ct,
             int page = 1, int pageSize = 20) =>
-            Results.Ok(await QueryEventsAsync(db, "identity", page, pageSize, ct))
-        ).RequireAuthorization("Admin");
+            Results.Ok(await QueryEventsAsync(db, "identity", page, pageSize, ct)));
 
         group.MapGet("/events/jobs", async (
             JobsDbContext db,
             CancellationToken ct,
             int page = 1, int pageSize = 20) =>
-            Results.Ok(await QueryEventsAsync(db, "jobs", page, pageSize, ct))
-        ).RequireAuthorization("Admin");
+            Results.Ok(await QueryEventsAsync(db, "jobs", page, pageSize, ct)));
 
         group.MapGet("/events/applications", async (
             ApplicationsDbContext db,
             CancellationToken ct,
             int page = 1, int pageSize = 20) =>
-            Results.Ok(await QueryEventsAsync(db, "applications", page, pageSize, ct))
-        ).RequireAuthorization("Admin");
+            Results.Ok(await QueryEventsAsync(db, "applications", page, pageSize, ct)));
 
         return group;
     }
