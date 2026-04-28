@@ -37,14 +37,17 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
     public async Task<PagedList<ApplicationSummaryDto>> ListForJobAsync(
         Guid jobId, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = dbContext.Applications.Where(a => a.JobId == JobId.From(jobId));
+        var query = dbContext.Applications
+            .Where(a => a.JobId == JobId.From(jobId))
+            .Select(a => new { AppId = a.Id.Value, JobId = a.JobId.Value, CandidateId = a.CandidateId.Value, a.Status, a.SubmittedAt });
+
         var total = await query.CountAsync(ct);
         var items = await query
             .Join(dbContext.JobReadModels,
-                a => a.JobId.Value,
+                a => a.JobId,
                 j => j.Id,
                 (a, j) => new ApplicationSummaryDto(
-                    a.Id.Value, a.JobId.Value, a.CandidateId.Value,
+                    a.AppId, a.JobId, a.CandidateId,
                     j.Title, j.City, j.Country,
                     a.Status, a.SubmittedAt))
             .OrderByDescending(a => a.SubmittedAt)
@@ -58,14 +61,17 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
     public async Task<PagedList<ApplicationSummaryDto>> ListForCandidateAsync(
         Guid candidateId, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = dbContext.Applications.Where(a => a.CandidateId == UserId.From(candidateId));
+        var query = dbContext.Applications
+            .Where(a => a.CandidateId == UserId.From(candidateId))
+            .Select(a => new { AppId = a.Id.Value, JobId = a.JobId.Value, CandidateId = a.CandidateId.Value, a.Status, a.SubmittedAt });
+
         var total = await query.CountAsync(ct);
         var items = await query
             .Join(dbContext.JobReadModels,
-                a => a.JobId.Value,
+                a => a.JobId,
                 j => j.Id,
                 (a, j) => new ApplicationSummaryDto(
-                    a.Id.Value, a.JobId.Value, a.CandidateId.Value,
+                    a.AppId, a.JobId, a.CandidateId,
                     j.Title, j.City, j.Country,
                     a.Status, a.SubmittedAt))
             .OrderByDescending(a => a.SubmittedAt)
