@@ -41,13 +41,49 @@ using var conn = new SqlConnection(connStr);
 await conn.OpenAsync();
 Console.WriteLine("Connected to database.");
 
+// --- Seed demo users ---
+var demoUsers = new[]
+{
+    (Email: "admin@jobmarket.dev",     FullName: "Admin",          Role: "Admin"),
+    (Email: "employer@jobmarket.dev",  FullName: "Demo Employer",  Role: "Employer"),
+    (Email: "candidate@jobmarket.dev", FullName: "Demo Candidate", Role: "Candidate"),
+};
+
+foreach (var user in demoUsers)
+{
+    using var checkCmd = new SqlCommand(
+        "SELECT COUNT(1) FROM [identity].user_profiles WHERE email = @email", conn);
+    checkCmd.Parameters.AddWithValue("@email", user.Email);
+    var count = (int)(await checkCmd.ExecuteScalarAsync())!;
+    if (count > 0)
+    {
+        Console.WriteLine($"Skipping {user.Email} (already exists).");
+        continue;
+    }
+
+    var hash = BCrypt.Net.BCrypt.HashPassword("P@ssword123");
+    using var insertCmd = new SqlCommand("""
+        INSERT INTO [identity].user_profiles (id, email, full_name, role, password_hash, created_at)
+        VALUES (@id, @email, @fullName, @role, @hash, @createdAt)
+        """, conn);
+    insertCmd.Parameters.AddWithValue("@id", Guid.NewGuid());
+    insertCmd.Parameters.AddWithValue("@email", user.Email);
+    insertCmd.Parameters.AddWithValue("@fullName", user.FullName);
+    insertCmd.Parameters.AddWithValue("@role", user.Role);
+    insertCmd.Parameters.AddWithValue("@hash", hash);
+    insertCmd.Parameters.AddWithValue("@createdAt", DateTime.UtcNow);
+    await insertCmd.ExecuteNonQueryAsync();
+    Console.WriteLine($"Seeded {user.Email}.");
+}
+
+// --- Seed 100 jobs using the first employer in the DB ---
 Guid employerId;
 using (var cmd = new SqlCommand("SELECT TOP 1 id FROM [identity].user_profiles WHERE role = 'Employer'", conn))
 {
     var result = await cmd.ExecuteScalarAsync();
     if (result is null || result == DBNull.Value)
     {
-        Console.WriteLine("No employer found in identity.user_profiles. Please create an employer account first.");
+        Console.WriteLine("No employer found. Aborting job seeding.");
         return;
     }
     employerId = (Guid)result;
