@@ -37,20 +37,17 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
     public async Task<PagedList<ApplicationSummaryDto>> ListForJobAsync(
         Guid jobId, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = dbContext.Applications
-            .Where(a => a.JobId == JobId.From(jobId))
-            .Select(a => new { AppId = a.Id.Value, JobId = a.JobId.Value, CandidateId = a.CandidateId.Value, a.Status, a.SubmittedAt });
-
-        var total = await query.CountAsync(ct);
-        var items = await query
+        var baseQuery = dbContext.Applications.Where(a => a.JobId == JobId.From(jobId));
+        var total = await baseQuery.CountAsync(ct);
+        var items = await baseQuery
             .Join(dbContext.JobReadModels,
-                a => a.JobId,
+                a => EF.Property<Guid>(a, "JobId"),
                 j => j.Id,
                 (a, j) => new ApplicationSummaryDto(
-                    a.AppId, a.JobId, a.CandidateId,
+                    a.Id.Value, a.JobId.Value, a.CandidateId.Value,
                     j.Title, j.City, j.Country,
                     a.Status, a.SubmittedAt))
-            .OrderByDescending(a => a.SubmittedAt)
+            .OrderByDescending(x => x.SubmittedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
@@ -61,20 +58,17 @@ public sealed class ApplicationRepository(ApplicationsDbContext dbContext)
     public async Task<PagedList<ApplicationSummaryDto>> ListForCandidateAsync(
         Guid candidateId, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = dbContext.Applications
-            .Where(a => a.CandidateId == UserId.From(candidateId))
-            .Select(a => new { AppId = a.Id.Value, JobId = a.JobId.Value, CandidateId = a.CandidateId.Value, a.Status, a.SubmittedAt });
-
-        var total = await query.CountAsync(ct);
-        var items = await query
+        var baseQuery = dbContext.Applications.Where(a => a.CandidateId == UserId.From(candidateId));
+        var total = await baseQuery.CountAsync(ct);
+        var items = await baseQuery
             .Join(dbContext.JobReadModels,
-                a => a.JobId,
+                a => EF.Property<Guid>(a, "JobId"),
                 j => j.Id,
                 (a, j) => new ApplicationSummaryDto(
-                    a.AppId, a.JobId, a.CandidateId,
+                    a.Id.Value, a.JobId.Value, a.CandidateId.Value,
                     j.Title, j.City, j.Country,
                     a.Status, a.SubmittedAt))
-            .OrderByDescending(a => a.SubmittedAt)
+            .OrderByDescending(x => x.SubmittedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
