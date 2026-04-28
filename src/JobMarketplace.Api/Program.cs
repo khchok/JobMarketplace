@@ -40,6 +40,7 @@ builder.Services.AddOpenApi();
 
 // Authorization policies
 builder.Services.AddAuthorizationBuilder()
+                    .AddPolicy("Admin", p => p.RequireClaim("app_role", "Admin"))
                     .AddPolicy("Employer", p => p.RequireClaim("app_role", "Employer"))
                     .AddPolicy("Candidate", p => p.RequireClaim("app_role", "Candidate"))
                     .AddPolicy("CandidateOrEmployer", p => p.RequireClaim("app_role", ["Employer", "Candidate"]));
@@ -62,6 +63,8 @@ builder.Services.AddScoped<ICurrentUserServiceAccessor, CurrentUserServiceAccess
 // Background service
 builder.Services.AddHostedService<OutboxProcessor>();
 
+builder.WebHost.UseSentry();
+
 var app = builder.Build();
 
 app.MapOpenApi();
@@ -79,5 +82,6 @@ app.MapGroup("/api/auth").MapAuthEndpoints(builder.Configuration);
 app.MapGroup("/api/identity").MapIdentityEndpoints();
 app.MapGroup("/api/jobs").MapJobEndpoints();
 app.MapGroup("/api/applications").MapApplicationEndpoints();
+app.MapGroup("/api/admin").MapAdminEndpoints();
 
 app.Run();
