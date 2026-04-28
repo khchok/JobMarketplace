@@ -70,6 +70,26 @@ public static class AuthEndpoints
             return Results.Ok(new { email, password, note = "These are shared demo credentials." });
         });
 
+        group.MapPost("/demo-admin", async (DemoRequest request, HttpContext ctx, ISender sender, IConfiguration cfg, CancellationToken ct) =>
+        {
+            var email = "admin@jobmarket.dev";
+            var password = "P@ssword123";
+            var fullName = "Demo Admin";
+
+            // Register if not exists (conflict = already seeded, proceed to login)
+            var register = new RegisterUserCommand(email, password, fullName, UserRole.Admin);
+            await sender.Send(register, ct);
+
+            var login = new LoginUserCommand(email, password);
+            var result = await sender.Send(login, ct);
+            if (result.IsFailure)
+                return result.ToHttpResult();
+
+            var token = GenerateToken(result.Value, cfg["Jwt:Secret"]!);
+            SetAuthCookie(ctx, token);
+            return Results.Ok(new { email, password, note = "These are shared demo credentials." });
+        });
+
         return group;
     }
 
