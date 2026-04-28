@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/JobMarketplace.Api/JobMarketplace.Api.csproj" />
+    <Project Path="src/JobMarketplace.Seeder/JobMarketplace.Seeder.csproj" />
   </Folder>
   <Folder Name="/src/Applications/">
     <Project Path="src/Applications/JobMarketplace.Applications.Application/JobMarketplace.Applications.Application.csproj" />
