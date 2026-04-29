@@ -36,8 +36,8 @@ public sealed class JobConfiguration : IEntityTypeConfiguration<Job>
 
         builder.OwnsOne(j => j.SalaryRange, b =>
         {
-            b.Property(s => s.Min).HasColumnName("salary_min").IsRequired();
-            b.Property(s => s.Max).HasColumnName("salary_max").IsRequired();
+            b.Property(s => s.Min).HasPrecision(18, 2).HasColumnName("salary_min").IsRequired();
+            b.Property(s => s.Max).HasPrecision(18, 2).HasColumnName("salary_max").IsRequired();
             b.Property(s => s.Currency).HasMaxLength(10).HasColumnName("salary_currency").IsRequired();
         });
 
