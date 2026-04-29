@@ -7,15 +7,14 @@ A backend API for a job marketplace — employers post jobs, candidates apply, e
 - **.NET 10** — Minimal APIs, no controllers
 - **MediatR** — CQRS, every request goes through a command or query handler
 - **FluentValidation** — request validation as a MediatR pipeline behaviour
-- **EFCore 10 + Npgsql** — PostgreSQL via Supabase
-- **Supabase Auth** — JWT-based auth, the backend just validates the token
+- **EFCore 10 + SQL** — Microsoft Azure SQL Database
 - **xUnit + FluentAssertions** — domain unit tests
 
 ## How it's structured
 
 Three bounded contexts, each with its own Domain / Application / Infrastructure stack:
 
-- **Identity** — maps a Supabase user to a local profile with a role (Employer or Candidate)
+- **Identity** — Manages user profile with role (Employer / Candidate / Admin)
 - **Jobs** — employers create and manage job listings
 - **Applications** — candidates apply to published jobs, employers move them through a workflow
 
@@ -35,16 +34,12 @@ Each bounded context gets its own EFCore DbContext and its own schema in the dat
 
 ## Auth
 
-Supabase handles sign-up and login. The API validates the JWT on every request, looks up the local `UserProfile` by the `sub` claim, then injects an `app_role` claim (`Employer` or `Candidate`) into the principal. Endpoint authorization uses standard ASP.NET Core policies against that claim.
-
-First-time users call `POST /api/identity/profile` to pick their role — that's the only endpoint that skips the profile lookup.
+Identity provides register and login endpoints. The API validates the JWT on every request, looks up the local `UserProfile` by the `sub` claim, then injects an `app_role` claim (`Employer` or `Candidate`) into the principal. Endpoint authorization uses standard ASP.NET Core policies against that claim.
 
 ## Running locally
 
-Fill in `appsettings.json` with your Supabase connection string and JWT secret, run the EFCore migrations, then:
+Fill in `appsettings.json` with your azure SQL connection string or locahost DB and JWT secret, run the EFCore migrations, then:
 
 ```bash
 dotnet run --project src/JobMarketplace.Api
 ```
-
-See `docs/plans/` for the step-by-step build guide.
